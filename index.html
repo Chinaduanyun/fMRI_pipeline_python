@@ -3,67 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>fMRI Workflow</title>
+    <title>基于Python的fMRI数据分析pipeline</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
+            margin: 40px;
         }
         .container {
             width: 80%;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: auto;
         }
-        h1, h2, h3 {
+        h1, h2, h3, h4, h5, h6 {
             color: #333;
         }
-        p {
-            color: #666;
-            line-height: 1.6;
+        table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
         }
-        .step {
-            margin-bottom: 40px;
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
         }
-        .step img {
-            max-width: 100%;
-            height: auto;
+        th {
+            background-color: #f2f2f2;
+        }
+        .note {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #ccc;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>fMRI Workflow</h1>
-        
-        <!-- Step 1 -->
-        <div class="step">
-            <h2>Step 1: Preprocessing</h2>
-            <p>Your Markdown content for Step 1 goes here.</p>
-            <img src="path/to/image1.jpg" alt="Preprocessing">
-        </div>
-        
-        <!-- Step 2 -->
-        <div class="step">
-            <h2>Step 2: Analysis</h2>
-            <p>Your Markdown content for Step 2 goes here.</p>
-            <img src="path/to/image2.jpg" alt="Analysis">
-        </div>
-        
-        <!-- Step 3 -->
-        <div class="step">
-            <h2>Step 3: Visualization</h2>
-            <p>Your Markdown content for Step 3 goes here.</p>
-            <img src="path/to/image3.jpg" alt="Visualization">
-        </div>
-        
-        <!-- Step 4 -->
-        <div class="step">
-            <h2>Step 4: Reporting</h2>
-            <p>Your Markdown content for Step 4 goes here.</p>
-            <img src="path/to/image4.jpg" alt="Reporting">
+        <h1>基于Python的fMRI数据分析pipeline</h1>
+        <p>项目成员：朱珊珊（南京师范大学）、王金琪（北京语言大学）、陈婉婷（浙江理工大学）、何丹妮（华东师范大学）</p>
+
+        <h2>需要安装以下工具/软件包</h2>
+        <ul>
+            <li>命令行 shell：Bash</li>
+            <li>版本控制系统：Git</li>
+            <li>支持远程控制的文本编辑器：VSCode</li>
+            <li>通过 Miniconda 使用 Python 3</li>
+            <li>虚拟化系统：Docker</li>
+            <li>一个 GitHub 帐户</li>
+        </ul>
+
+        <h2>0.怎么建立运行环境</h2>
+        <h3>为什么要选择使用docker镜像？</h3>
+        <p>Docker允许你创建一个隔离的环境，其中预先安装了所有必要的依赖项。可以通过编写Dockerfile来创建包含所需工具和库的镜像。</p>
+
+        <!-- 其他内容省略，按照上面的格式添加 -->
+
+        <h2>功能磁共振分析方法汇总</h2>
+        <table>
+            <tr>
+                <th>分析方法</th>
+                <th>python包</th>
+                <th>适用的数据类型</th>
+                <th>备注</th>
+            </tr>
+            <tr>
+                <td>GLM</td>
+                <td>Nilearn, Nipype, fMRIflows</td>
+                <td>任务态</td>
+                <td></td>
+            </tr>
+            <!-- 其他行按照上面的格式添加 -->
+        </table>
+
+        <div class="note">
+            <h3>Note.</h3>
+            <p>generalized form of context dependent psychophysiological interaction method (gPPI)</p>
+            <p>Granger causality analysis(GCA)</p>
+            <!-- 其他备注内容 -->
         </div>
     </div>
 </body>
