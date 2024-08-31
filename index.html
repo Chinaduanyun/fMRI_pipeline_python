@@ -1,171 +1,579 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>基于Python的fMRI数据分析pipeline</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1, h2, h3, h4, h5, h6 {
-            color: #333;
-        }
-        ul, ol {
-            padding-left: 20px;
-        }
-        pre {
-            background-color: #eee;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f9f9f9;
-        }
-        .note {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #fef4f4;
-            border-left: 5px solid #f99;
-        }
-        a {
-            color: #337ab7;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>基于Python的fMRI数据分析pipeline</h1>
-        <p>项目成员：朱珊珊（南京师范大学）、王金琪（北京语言大学）、陈婉婷（浙江理工大学）、何丹妮（华东师范大学）</p>
+<!doctype html>
+<html>
+    <head>
+        <title>基于Python的fMRI数据分析pipeline</title>
+        <meta charset='utf-8'/>
+        <style>
+ .ͼ1.cm-focused {outline: 1px dotted #212121;}
+.ͼ1 {position: relative !important; box-sizing: border-box; display: flex !important; flex-direction: column;}
+.ͼ1 .cm-scroller {display: flex !important; align-items: flex-start !important; font-family: monospace; line-height: 1.4; height: 100%; overflow-x: auto; position: relative; z-index: 0;}
+.ͼ1 .cm-content[contenteditable=true] {-webkit-user-modify: read-write-plaintext-only;}
+.ͼ1 .cm-content {margin: 0; flex-grow: 2; flex-shrink: 0; display: block; white-space: pre; word-wrap: normal; box-sizing: border-box; min-height: 100%; padding: 4px 0; outline: none;}
+.ͼ1 .cm-lineWrapping {white-space: pre-wrap; white-space: break-spaces; word-break: break-word; overflow-wrap: anywhere; flex-shrink: 1;}
+.ͼ2 .cm-content {caret-color: black;}
+.ͼ3 .cm-content {caret-color: white;}
+.ͼ1 .cm-line {display: block; padding: 0 2px 0 6px;}
+.ͼ1 .cm-layer > * {position: absolute;}
+.ͼ1 .cm-layer {position: absolute; left: 0; top: 0; contain: size style;}
+.ͼ2 .cm-selectionBackground {background: #d9d9d9;}
+.ͼ3 .cm-selectionBackground {background: #222;}
+.ͼ2.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {background: #d7d4f0;}
+.ͼ3.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {background: #233;}
+.ͼ1 .cm-cursorLayer {pointer-events: none;}
+.ͼ1.cm-focused > .cm-scroller > .cm-cursorLayer {animation: steps(1) cm-blink 1.2s infinite;}
+@keyframes cm-blink {50% {opacity: 0;}}
+@keyframes cm-blink2 {50% {opacity: 0;}}
+.ͼ1 .cm-cursor, .ͼ1 .cm-dropCursor {border-left: 1.2px solid black; margin-left: -0.6px; pointer-events: none;}
+.ͼ1 .cm-cursor {display: none;}
+.ͼ3 .cm-cursor {border-left-color: #444;}
+.ͼ1 .cm-dropCursor {position: absolute;}
+.ͼ1.cm-focused > .cm-scroller > .cm-cursorLayer .cm-cursor {display: block;}
+.ͼ1 .cm-iso {unicode-bidi: isolate;}
+.ͼ1 .cm-announced {position: fixed; top: -10000px;}
+@media print {.ͼ1 .cm-announced {display: none;}}
+.ͼ2 .cm-activeLine {background-color: #cceeff44;}
+.ͼ3 .cm-activeLine {background-color: #99eeff33;}
+.ͼ2 .cm-specialChar {color: red;}
+.ͼ3 .cm-specialChar {color: #f78;}
+.ͼ1 .cm-gutters {flex-shrink: 0; display: flex; height: 100%; box-sizing: border-box; inset-inline-start: 0; z-index: 200;}
+.ͼ2 .cm-gutters {background-color: #f5f5f5; color: #6c6c6c; border-right: 1px solid #ddd;}
+.ͼ3 .cm-gutters {background-color: #333338; color: #ccc;}
+.ͼ1 .cm-gutter {display: flex !important; flex-direction: column; flex-shrink: 0; box-sizing: border-box; min-height: 100%; overflow: hidden;}
+.ͼ1 .cm-gutterElement {box-sizing: border-box;}
+.ͼ1 .cm-lineNumbers .cm-gutterElement {padding: 0 3px 0 5px; min-width: 20px; text-align: right; white-space: nowrap;}
+.ͼ2 .cm-activeLineGutter {background-color: #e2f2ff;}
+.ͼ3 .cm-activeLineGutter {background-color: #222227;}
+.ͼ1 .cm-panels {box-sizing: border-box; position: sticky; left: 0; right: 0;}
+.ͼ2 .cm-panels {background-color: #f5f5f5; color: black;}
+.ͼ2 .cm-panels-top {border-bottom: 1px solid #ddd;}
+.ͼ2 .cm-panels-bottom {border-top: 1px solid #ddd;}
+.ͼ3 .cm-panels {background-color: #333338; color: white;}
+.ͼ1 .cm-tab {display: inline-block; overflow: hidden; vertical-align: bottom;}
+.ͼ1 .cm-widgetBuffer {vertical-align: text-top; height: 1em; width: 0; display: inline;}
+.ͼ1 .cm-placeholder {color: #888; display: inline-block; vertical-align: top;}
+.ͼ1 .cm-highlightSpace:before {content: attr(data-display); position: absolute; pointer-events: none; color: #888;}
+.ͼ1 .cm-highlightTab {background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="20"><path stroke="%23888" stroke-width="1" fill="none" d="M1 10H196L190 5M190 15L196 10M197 4L197 16"/></svg>'); background-size: auto 100%; background-position: right 90%; background-repeat: no-repeat;}
+.ͼ1 .cm-trailingSpace {background-color: #ff332255;}
+.ͼ1 .cm-button {vertical-align: middle; color: inherit; font-size: 70%; padding: .2em 1em; border-radius: 1px;}
+.ͼ2 .cm-button:active {background-image: linear-gradient(#b4b4b4, #d0d3d6);}
+.ͼ2 .cm-button {background-image: linear-gradient(#eff1f5, #d9d9df); border: 1px solid #888;}
+.ͼ3 .cm-button:active {background-image: linear-gradient(#111, #333);}
+.ͼ3 .cm-button {background-image: linear-gradient(#393939, #111); border: 1px solid #888;}
+.ͼ1 .cm-textfield {vertical-align: middle; color: inherit; font-size: 70%; border: 1px solid silver; padding: .2em .5em;}
+.ͼ2 .cm-textfield {background-color: white;}
+.ͼ3 .cm-textfield {border: 1px solid #555; background-color: inherit;}
+.ͼ1 .cm-foldPlaceholder {background-color: #eee; border: 1px solid #ddd; color: #888; border-radius: .2em; margin: 0 1px; padding: 0 1px; cursor: pointer;}
+.ͼ1 .cm-foldGutter span {padding: 0 1px; cursor: pointer;}
+ /* set the styles */
 
-        <h2>需要安装以下工具/软件包</h2>
-        <ul>
-            <li>命令行 shell：Bash</li>
-            <li>版本控制系统：Git</li>
-            <li>支持远程控制的文本编辑器：VSCode</li>
-            <li>通过 Miniconda 使用 Python 3</li>
-            <li>虚拟化系统：Docker</li>
-            <li>一个 GitHub 帐户</li>
-        </ul>
+.password-second-confirm {
+  font-weight: bold;
+}
 
-        <h2>0.怎么建立运行环境</h2>
-        <h3>为什么要选择使用docker镜像？</h3>
-        <p>Docker允许你创建一个隔离的环境，其中预先安装了所有必要的依赖项。可以通过编写Dockerfile来创建包含所需工具和库的镜像。</p>
+.password-disclaimer {
+  font-weight: bold;
+}
 
-        <h2>环境设置</h2>
-        <!-- 环境设置内容 -->
+.settings-auth-related {
+  border-top: 1px solid var(--background-modifier-border);
+  padding-top: 18px;
+}
 
-        <h2>数据转换</h2>
-        <h3>HeuDiconv （推荐用这个）</h3>
-        <ul>
-            <li>理由：用于将DICOM文件转换为BIDS格式。它包装了dcm2niix工具，使其使用更加便捷</li>
-            <li>操作指南：<a href="https://heudiconv.readthedocs.io/en/latest/" target="_blank">HeuDiconv 指南</a></li>
-        </ul>
+.s3-disclaimer {
+  font-weight: bold;
+}
+.s3-hide {
+  display: none;
+}
 
-        <h2>质量控制</h2>
-        <h3>MRIQC package （使用最广泛）</h3>
-        <ul>
-            <li>理由：MRIQC是一个无需参考图像即可从结构性(T1w和 T2w)和功能性MRI数据中提取图像质量指标(IQMs)的工具。MRIQC是Nipype生态系统的一部分，并依赖于其他工具如ANTs和AFNI。</li>
-            <li><a href="https://mriqc.readthedocs.io/en/latest/" target="_blank">MRIQC 指南</a></li>
-        </ul>
+.dropbox-disclaimer {
+  font-weight: bold;
+}
+.dropbox-hide {
+  display: none;
+}
 
-        <h2>工作流程设计（Workflow Design）</h2>
-        <ul>
-            <li>目的: 提取图像质量指标（IQMs）</li>
-            <li>原则:
-                <ol>
-                    <li>快速预处理。</li>
-                    <li>易于在桌面和高性能计算中使用。</li>
-                    <li>生成详细报告。</li>
-                </ol>
-            </li>
-            <li>实施:
-                <ul>
-                    <li>使用FSL、ANTs和AFNI等工具，使用nipype框架进行处理。</li>
-                    <li>遵循BIDS-Apps标准，并持续测试。</li>
-                    <li>输出: 包括输入图像（64个T1w，31个fMRI）的IQMs和视觉报告。</li>
-                </ul>
-            </li>
-        </ul>
+.dropbox-auth-button-hide {
+  display: none;
+}
 
-        <h2>预处理</h2>
-        <h3>推荐使用：</h3>
-        <ul>
-            <li>fMRIPrep package（示例代码，具体命令行的参数、github链接）</li>
-            <li><a href="https://github.com/nipreps/fmriprep" target="_blank">fMRIPrep GitHub</a></li>
-        </ul>
+.dropbox-revoke-auth-button-hide {
+  display: none;
+}
 
-        <h3>参考论文：</h3>
-        <p>fMRIPrep: a robust preprocessing pipeline for functional MRI | Nature Methods</p>
+.onedrive-disclaimer {
+  font-weight: bold;
+}
+.onedrive-hide {
+  display: none;
+}
 
-        <h3>MRIPrep输出符合BIDS Derivatives 规范</h3>
-        <ul>
-            <li>可视化 QA（质量评估）报告：每个主题一个HTML，允许用户对处理质量进行全面的可视化评估，并确保fMRIPrep操作的透明度。</li>
-            <li>预处理数据: 输入的 fMRI 数据已准备好进行分析，即在应用了各种准备程序之后。例如，经过INU校正的 T1 加权图像版本（每个受试者）、经过头部运动校正、切片时间校正并对齐到同一受试者的 T1w 空间或某个标准空间后的BOLD图像。</li>
-            <li>Confounds: this is a special family of derivatives that can be utilized to inform subsequent denoising steps.</li>
-        </ul>
+.onedrive-auth-button-hide {
+  display: none;
+}
 
-        <h3>可以参考的代码脚本：</h3>
-        <p><a href="https://github.com/nipreps/fmriprep/blob/master/docs/workflows.rst" target="_blank">fmriprep 代码脚本</a></p>
+.onedrive-revoke-auth-button-hide {
+  display: none;
+}
 
-        <h2>结构像预处理：</h2>
-        <h3>INU校正 (INU correction)</h3>
-        <ul>
-            <li>目的：提高图像质量：去除由于磁场不均匀性引起的伪影，如图像中的条纹或斑块。</li>
-            <li>增强分析准确性：在进行统计分析或机器学习算法之前，校正INU可以减少由于强度变化引起的假阳性或假阴性结果，从而提高研究结果的准确性。</li>
-            <li>工具：<a href="https://www.fil.ion.ucl.ac.uk/spm/" target="_blank">SPM</a>、<a href="https://fsl.fmrib.ox.ac.uk" target="_blank">FSL</a></li>
-            <li>优点：正确执行INU校正对于提高后续图像分析步骤的准确性至关重要，因为它能够显著改善图像质量，减少由于磁场不均匀性引起的伪影。</li>
-        </ul>
+.webdav-disclaimer {
+  font-weight: bold;
+}
+.webdav-hide {
+  display: none;
+}
 
-        <h3>融合和一致性 (Fuse and Conform)</h3>
-        <ul>
-            <li>Fuse：对齐，然后进行融合（即对齐后平均）以生成一个单一的平均图像。</li>
-            <li>Conform：在这个步骤中，fMRIPrep会将图像调整为一致的方向（通常是右-前-上的方向）和体素大小。</li>
-        </ul>
+.qrcode-img {
+  width: 350px;
+  height: 350px;
+}
 
-        <h3>头颅去除 (Skull-stripping)</h3>
-        <ul>
-            <li>目的：从脑部影像数据中去除非脑组织（如头骨、头皮和其他非脑组织），以便专注于大脑组织的分析。</li>
-        </ul>
+.ignorepaths-textarea {
+  font-family: monospace;
+}
 
-        <h3>空间归一化 (Spatial normalization)</h3>
-        <ul>
-            <li>目的：将个体大脑映射到标准空间（如MNI空间）。</li>
-            <li>使用的工具：ANTs’ <code>antsRegistration</code></li>
-            <li>fmriPrep中脚本设置：</li>
-        </ul>
-        <pre>fmriprep /path/to/BIDS_dataset /path/to/output_dir participant --participant-label sub-01 --fs-license-file /path/to/license.txt --output-spaces MNI152NLin2009cAsym</pre>
+.logtohttpserver-warning {
+  color: red;
+  font-weight: bolder;
+}
+ 
+.pandoc-plugin-error {
+    color: red;
+}
+ .zt-format {
+  border: 1px solid var(--background-modifier-border);
+  padding: 1rem;
+  background-color: var(--background-primary);
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
 
-        <h3>脑组织分割 (Brain tissue segmentation)</h3>
-        <ul>
-            <li>目的：将大脑分割成灰质、白质和脑脊液等区域。</li>
-        </ul>
+.zt-format__form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 1rem;
+  max-width: 600px;
+}
 
-        <h3>皮层重建 (Surface reconstruction)</h3>
-        <p>皮层重建通常放在结构像预处理的最后一步。</p>
+.zt-format__form:last-child {
+  margin-bottom: 0;
+}
 
-        <h2>功能像预处理：</h2>
-        <p>在完成结构像的
+.zt-format__label {
+  font-size: 0.9em;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.is-deprecated .zt-format__label {
+  color: var(--text-error);
+}
+
+.zt-format__input-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.zt-format__input-wrapper textarea {
+  resize: vertical;
+}
+
+.zt-format__input-wrapper > *:not(.checkbox-container) {
+  width: 100% !important;
+}
+
+.is-deprecated .zt-format__input-wrapper button {
+  width: auto !important;
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-left: 5px;
+}
+
+.zt-format__delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 7px 9px;
+  margin-left: 10px;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+.zt-json-viewer {
+  font-size: 13px;
+}
+
+.zt-json-viewer .react-json-view {
+  padding: 1em;
+  border-radius: 10px;
+  margin-top: 1em;
+  overflow: auto;
+  font-family: var(--font-monospace) !important;
+}
+
+.zt-json-viewer__btns {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.zt-json-viewer__btns label {
+  display: block;
+  font-weight: bold;
+  padding-top: 1em;
+}
+
+.zt-json-viewer__btns select {
+  font-size: 1em;
+}
+
+.zt-json-viewer__btns button {
+  font-size: 1em;
+  margin-right: 5px;
+}
+
+.zt-json-viewer__preview,
+.zt-json-viewer__data {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  padding: 1em;
+  margin-top: 1em;
+}
+
+.zt-json-viewer__preview.error {
+  background-color: #ff000011;
+  font-family: var(--font-monospace);
+}
+
+.zt-json-viewer__preview pre {
+  overflow: auto;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.zt-json-viewer__preview pre,
+.zt-json-viewer__preview code {
+  font-family: inherit;
+}
+
+.zt-json-viewer__preview:not(.error) pre {
+  font-family: var(--font-text, --font-default, --default-font);
+  max-height: 70vh;
+  min-height: 400px;
+}
+
+.zt-multiselect {
+  width: 300px;
+  text-align: left;
+}
+
+.zt-multiselect input {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.zt-format__input-note {
+  font-style: italic;
+  font-size: 0.9em;
+  padding-top: 10px;
+  margin-bottom: 10px;
+}
+
+.zt-setting-item pre,
+.zt-format__input-note pre {
+  display: inline-block;
+  margin: 0;
+  padding: 0 6px;
+  background-color: var(--background-secondary-alt);
+  border-radius: 4px;
+}
+
+.zt-asset-success {
+  text-align: left;
+  display: flex;
+}
+
+.zt-asset-success__icon {
+  color: var(--interactive-success);
+  font-size: 24px;
+  margin-right: 5px;
+}
+
+.zt-asset-success__icon svg {
+  width: 1em !important;
+  height: 1em !important;
+}
+
+.zt-asset-success__message {
+  font-size: 0.9em;
+}
+
+.zt-suggest-title {
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-top: var(--size-4-1);
+}
+
+.zt-suggest-loading-wrapper {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  padding: var(--size-4-2) 0;
+}
+
+.zt-suggest-loading,
+.zt-suggest-loading:before,
+.zt-suggest-loading:after {
+  border-radius: 999px;
+  width: 1em;
+  height: 1em;
+  animation-fill-mode: both;
+  animation: bblFadInOut 1.6s infinite ease-in-out;
+}
+
+.zt-suggest-loading {
+  display: block;
+  color: var(--text-muted);
+  font-size: 7px;
+  position: relative;
+  animation-delay: -0.16s;
+  top: -1em;
+}
+.zt-suggest-loading:before,
+.zt-suggest-loading:after {
+  content: '';
+  position: absolute;
+}
+.zt-suggest-loading:before {
+  left: -2em;
+  animation-delay: -0.32s;
+}
+.zt-suggest-loading:after {
+  left: 2em;
+}
+
+.zt-color-chip {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  margin-right: var(--size-4-1);
+}
+
+@keyframes bblFadInOut {
+  0%,
+  80%,
+  100% {
+    box-shadow: 0 1em 0 -1.3em;
+  }
+  40% {
+    box-shadow: 0 1em 0 0;
+  }
+}
+ undefined
+</style>
+    </head>
+    <body>
+<p dir="auto">项目成员：朱珊珊（南京师范大学）、王金琪（北京语言大学）、陈婉婷（浙江理工大学）、何丹妮（华东师范大学）、葛铠诚（浙江理工大学）</p>
+<h2 data-heading="需要安装以下工具/软件包" dir="auto">需要安装以下工具/软件包</h2>
+<ul>
+<li dir="auto">命令行 shell：Bash</li>
+<li dir="auto">版本控制系统：Git</li>
+<li dir="auto">支持远程控制的文本编辑器：VSCode</li>
+<li dir="auto">通过 Miniconda 使用 Python 3</li>
+<li dir="auto">虚拟化系统：Docker</li>
+<li dir="auto">一个 GitHub 帐户</li>
+</ul>
+<h2 data-heading="0.怎么建立运行环境" dir="auto">0.怎么建立运行环境</h2>
+<h3 data-heading="为什么要选择使用docker镜像？" dir="auto">为什么要选择使用docker镜像？</h3>
+<p dir="auto">Docker允许你创建一个隔离的环境，其中预先安装了所有必要的依赖项。可以通过编写Dockerfile来创建包含所需工具和库的镜像。</p>
+<h2 data-heading="环境设置" dir="auto">环境设置</h2>
+<h2 data-heading="数据转换" dir="auto">数据转换</h2>
+<h3 data-heading="HeuDiconv （推荐用这个）" dir="auto">HeuDiconv （推荐用这个）</h3>
+<ul>
+<li dir="auto">理由：用于将DICOM文件转换为BIDS格式。它包装了dcm2niix工具，使其使用更加便捷</li>
+<li dir="auto">操作指南：<a data-tooltip-position="top" aria-label="https://heudiconv.readthedocs.io/en/latest/" rel="noopener" class="external-link" href="https://heudiconv.readthedocs.io/en/latest/" target="_blank">HeuDiconv 指南</a>  </li>
+</ul>
+<h2 data-heading="质量控制" dir="auto">质量控制</h2>
+<h3 data-heading="MRIQC package （使用最广泛）" dir="auto">MRIQC package （使用最广泛）</h3>
+<ul>
+<li dir="auto">理由：MRIQC是一个无需参考图像即可从结构性(T1w和 T2w)和功能性MRI数据中提取图像质量指标(IQMs)的工具。MRIQC是Nipype生态系统的一部分，并依赖于其他工具如ANTs和AFNI。</li>
+<li dir="auto"><a data-tooltip-position="top" aria-label="https://mriqc.readthedocs.io/en/latest/" rel="noopener" class="external-link" href="https://mriqc.readthedocs.io/en/latest/" target="_blank">MRIQC 指南</a>  </li>
+</ul>
+<h2 data-heading="工作流程设计（Workflow Design）" dir="auto">工作流程设计（Workflow Design）</h2>
+<ul>
+<li dir="auto">目的: 提取图像质量指标（IQMs）。</li>
+<li dir="auto">原则:
+<ol>
+<li dir="auto">快速预处理。</li>
+<li dir="auto">易于在桌面和高性能计算中使用。</li>
+<li dir="auto">生成详细报告。</li>
+</ol>
+</li>
+<li dir="auto">实施:
+<ul>
+<li dir="auto">使用FSL、ANTs和AFNI等工具，使用nipype框架进行处理。</li>
+<li dir="auto">遵循BIDS-Apps标准，并持续测试。</li>
+<li dir="auto">输出: 包括输入图像（64个T1w，31个fMRI）的IQMs和视觉报告。</li>
+</ul>
+</li>
+</ul>
+<h2 data-heading="预处理" dir="auto">预处理</h2>
+<h3 data-heading="推荐使用：" dir="auto">推荐使用：</h3>
+<ul>
+<li dir="auto">fMRIPrep package（示例代码，具体命令行的参数、github链接）</li>
+<li dir="auto"><a data-tooltip-position="top" aria-label="https://github.com/nipreps/fmriprep" rel="noopener" class="external-link" href="https://github.com/nipreps/fmriprep" target="_blank">fMRIPrep GitHub</a>  </li>
+</ul>
+<h3 data-heading="参考论文：" dir="auto">参考论文：</h3>
+<p dir="auto">fMRIPrep: a robust preprocessing pipeline for functional MRI | Nature Methods</p>
+<h3 data-heading="MRIPrep输出符合BIDS Derivatives 规范" dir="auto">MRIPrep输出符合BIDS Derivatives 规范</h3>
+<ul>
+<li dir="auto">可视化 QA（质量评估）报告：每个主题一个HTML，允许用户对处理质量进行全面的可视化评估，并确保fMRIPrep操作的透明度。</li>
+<li dir="auto">预处理数据: 输入的 fMRI 数据已准备好进行分析，即在应用了各种准备程序之后。例如，经过INU校正的 T1 加权图像版本（每个受试者）、经过头部运动校正、切片时间校正并对齐到同一受试者的 T1w 空间或某个标准空间后的BOLD图像。</li>
+<li dir="auto">Confounds: this is a special family of derivatives that can be utilized to inform subsequent denoising steps.</li>
+</ul>
+<h3 data-heading="可以参考的代码脚本：" dir="auto">可以参考的代码脚本：</h3>
+<p dir="auto"><a data-tooltip-position="top" aria-label="https://github.com/nipreps/fmriprep/blob/master/docs/workflows.rst" rel="noopener" class="external-link" href="https://github.com/nipreps/fmriprep/blob/master/docs/workflows.rst" target="_blank">fmriprep 代码脚本</a>  </p>
+<h2 data-heading="结构像预处理：" dir="auto">结构像预处理：</h2>
+<h3 data-heading="INU校正 (INU correction)" dir="auto">INU校正 (INU correction)</h3>
+<ul>
+<li dir="auto">目的：提高图像质量：去除由于磁场不均匀性引起的伪影，如图像中的条纹或斑块。</li>
+<li dir="auto">增强分析准确性：在进行统计分析或机器学习算法之前，校正INU可以减少由于强度变化引起的假阳性或假阴性结果，从而提高研究结果的准确性。</li>
+<li dir="auto">工具：<a data-tooltip-position="top" aria-label="https://www.fil.ion.ucl.ac.uk/spm/" rel="noopener" class="external-link" href="https://www.fil.ion.ucl.ac.uk/spm/" target="_blank">SPM</a>、<a data-tooltip-position="top" aria-label="https://fsl.fmrib.ox.ac.uk" rel="noopener" class="external-link" href="https://fsl.fmrib.ox.ac.uk" target="_blank">FSL</a>  </li>
+<li dir="auto">优点：正确执行INU校正对于提高后续图像分析步骤的准确性至关重要，因为它能够显著改善图像质量，减少由于磁场不均匀性引起的伪影。</li>
+</ul>
+<h3 data-heading="融合和一致性 (Fuse and Conform)" dir="auto">融合和一致性 (Fuse and Conform)</h3>
+<ul>
+<li dir="auto">Fuse：对齐，然后进行融合（即对齐后平均）以生成一个单一的平均图像。</li>
+<li dir="auto">Conform：在这个步骤中，fMRIPrep会将图像调整为一致的方向（通常是右-前-上的方向）和体素大小。</li>
+</ul>
+<h3 data-heading="头颅去除 (Skull-stripping)" dir="auto">头颅去除 (Skull-stripping)</h3>
+<ul>
+<li dir="auto">目的：从脑部影像数据中去除非脑组织（如头骨、头皮和其他非脑组织），以便专注于大脑组织的分析。</li>
+</ul>
+<h3 data-heading="空间归一化 (Spatial normalization)" dir="auto">空间归一化 (Spatial normalization)</h3>
+<ul>
+<li dir="auto">目的：将个体大脑映射到标准空间（如MNI空间）。</li>
+<li dir="auto">使用的工具：ANTs’ <code>antsRegistration</code></li>
+<li dir="auto">fmriPrep中脚本设置：</li>
+</ul>
+<pre class="language-shell" tabindex="0"><code class="language-shell is-loaded">fmriprep /path/to/BIDS_dataset /path/to/output_dir participant --participant-label sub-01 --fs-license-file /path/to/license.txt --output-spaces MNI152NLin2009cAsym
+</code><button class="copy-code-button">复制</button></pre>
+<h3 data-heading="脑组织分割 (Brain tissue segmentation)" dir="auto">脑组织分割 (Brain tissue segmentation)</h3>
+<ul>
+<li dir="auto">目的：将大脑分割成灰质、白质和脑脊液等区域。</li>
+</ul>
+<h3 data-heading="皮层重建 (Surface reconstruction)" dir="auto">皮层重建 (Surface reconstruction)</h3>
+<ul>
+<li dir="auto">皮层重建通常放在结构像预处理的最后一步。</li>
+</ul>
+<h2 data-heading="功能像预处理：" dir="auto">功能像预处理：</h2>
+<ul>
+<li dir="auto">在完成结构像的预处理后，接下来的步骤是将功能像与结构像对齐。</li>
+</ul>
+<h2 data-heading="功能磁共振分析方法汇总" dir="auto">功能磁共振分析方法汇总</h2>
+<h3 data-heading="分析方法" dir="auto">分析方法</h3>
+<table>
+<thead>
+<tr>
+<th>分析方法</th>
+<th>python包</th>
+<th>适用的数据类型</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GLM</td>
+<td>Nilearn, Nipype, fMRIflows</td>
+<td>任务态</td>
+<td></td>
+</tr>
+<tr>
+<td>RSA</td>
+<td>NeuroRA, PyMVPA, Nilearn, brainspace</td>
+<td>任务态</td>
+<td></td>
+</tr>
+<tr>
+<td>IS-RSA</td>
+<td>Nilearn, Brainiak, Pyrsa, PyMVPA, Nipype</td>
+<td>任务态</td>
+<td></td>
+</tr>
+<tr>
+<td>FC</td>
+<td>Nilearn, Nipype, fMRIflows</td>
+<td>任务态、静息态</td>
+<td></td>
+</tr>
+<tr>
+<td>ISC</td>
+<td>brainiak</td>
+<td>任务态</td>
+<td></td>
+</tr>
+<tr>
+<td>ISFC</td>
+<td>brainiak</td>
+<td>任务态</td>
+<td></td>
+</tr>
+<tr>
+<td>PPI/gPPI</td>
+<td>PyPPI</td>
+<td>任务态</td>
+<td></td>
+</tr>
+<tr>
+<td>GCA</td>
+<td>PyGranger, MNE-Python</td>
+<td>任务态</td>
+<td></td>
+</tr>
+<tr>
+<td>MVPA</td>
+<td>nilearn, PyMVPA，brainiak，nipype+sklearn</td>
+<td>任务态</td>
+<td></td>
+</tr>
+<tr>
+<td>Gradient</td>
+<td>brainspace, sklearn</td>
+<td>静息态</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 data-heading="注：" dir="auto">注：</h3>
+<ul>
+<li dir="auto">generalized form of context dependent psychophysiological interaction method (gPPI)</li>
+<li dir="auto">Granger causality analysis(GCA)</li>
+<li dir="auto">RSA (Representational Similarity Analysis)被试内</li>
+<li dir="auto">IS-RSA (Inter-subject Representational Similarity Analysis)被试间</li>
+<li dir="auto">ISC (Inter-subject correlation)</li>
+<li dir="auto">ISFC (Inter-subject functional connectivity)</li>
+<li dir="auto">MVPA (multi-voxel pattern analysis)</li>
+</ul>
+<h3 data-heading="可视化工具" dir="auto">可视化工具</h3>
+<ul>
+<li dir="auto">nilearn、pysurfer、MRICron、MRICronGL</li>
+<li dir="auto">Spm、fsl（常用于glm分析）</li>
+<li dir="auto">Ica分析 （Group ICA of fMRI Toolbox，gift）</li>
+<li dir="auto">Freesurfer</li>
+<li dir="auto">弥散图像 dsistudio mrtrixv</li>
+<li dir="auto">弥散图像 (Diffusion Imaging in Python, Dipy)</li>
+<li dir="auto">amico (Accelerated Microstructure Imaging via Convex Optimization)</li>
+<li dir="auto">机器学习ski-learn</li>
+<li dir="auto">Dpabi</li>
+</ul>
+    </body>
+</html>
