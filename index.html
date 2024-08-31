@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,18 +7,30 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 40px;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
         }
         .container {
-            width: 80%;
-            margin: auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         h1, h2, h3, h4, h5, h6 {
             color: #333;
         }
+        ul, ol {
+            padding-left: 20px;
+        }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
         table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-top: 20px;
             border-collapse: collapse;
         }
         th, td {
@@ -27,13 +39,20 @@
             text-align: left;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #f9f9f9;
         }
         .note {
             margin-top: 20px;
             padding: 10px;
-            background-color: #f9f9f9;
-            border-left: 5px solid #ccc;
+            background-color: #fef4f4;
+            border-left: 5px solid #f99;
+        }
+        a {
+            color: #337ab7;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -56,31 +75,97 @@
         <h3>为什么要选择使用docker镜像？</h3>
         <p>Docker允许你创建一个隔离的环境，其中预先安装了所有必要的依赖项。可以通过编写Dockerfile来创建包含所需工具和库的镜像。</p>
 
-        <!-- 其他内容省略，按照上面的格式添加 -->
+        <h2>环境设置</h2>
+        <!-- 环境设置内容 -->
 
-        <h2>功能磁共振分析方法汇总</h2>
-        <table>
-            <tr>
-                <th>分析方法</th>
-                <th>python包</th>
-                <th>适用的数据类型</th>
-                <th>备注</th>
-            </tr>
-            <tr>
-                <td>GLM</td>
-                <td>Nilearn, Nipype, fMRIflows</td>
-                <td>任务态</td>
-                <td></td>
-            </tr>
-            <!-- 其他行按照上面的格式添加 -->
-        </table>
+        <h2>数据转换</h2>
+        <h3>HeuDiconv （推荐用这个）</h3>
+        <ul>
+            <li>理由：用于将DICOM文件转换为BIDS格式。它包装了dcm2niix工具，使其使用更加便捷</li>
+            <li>操作指南：<a href="https://heudiconv.readthedocs.io/en/latest/" target="_blank">HeuDiconv 指南</a></li>
+        </ul>
 
-        <div class="note">
-            <h3>Note.</h3>
-            <p>generalized form of context dependent psychophysiological interaction method (gPPI)</p>
-            <p>Granger causality analysis(GCA)</p>
-            <!-- 其他备注内容 -->
-        </div>
-    </div>
-</body>
-</html>
+        <h2>质量控制</h2>
+        <h3>MRIQC package （使用最广泛）</h3>
+        <ul>
+            <li>理由：MRIQC是一个无需参考图像即可从结构性(T1w和 T2w)和功能性MRI数据中提取图像质量指标(IQMs)的工具。MRIQC是Nipype生态系统的一部分，并依赖于其他工具如ANTs和AFNI。</li>
+            <li><a href="https://mriqc.readthedocs.io/en/latest/" target="_blank">MRIQC 指南</a></li>
+        </ul>
+
+        <h2>工作流程设计（Workflow Design）</h2>
+        <ul>
+            <li>目的: 提取图像质量指标（IQMs）</li>
+            <li>原则:
+                <ol>
+                    <li>快速预处理。</li>
+                    <li>易于在桌面和高性能计算中使用。</li>
+                    <li>生成详细报告。</li>
+                </ol>
+            </li>
+            <li>实施:
+                <ul>
+                    <li>使用FSL、ANTs和AFNI等工具，使用nipype框架进行处理。</li>
+                    <li>遵循BIDS-Apps标准，并持续测试。</li>
+                    <li>输出: 包括输入图像（64个T1w，31个fMRI）的IQMs和视觉报告。</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>预处理</h2>
+        <h3>推荐使用：</h3>
+        <ul>
+            <li>fMRIPrep package（示例代码，具体命令行的参数、github链接）</li>
+            <li><a href="https://github.com/nipreps/fmriprep" target="_blank">fMRIPrep GitHub</a></li>
+        </ul>
+
+        <h3>参考论文：</h3>
+        <p>fMRIPrep: a robust preprocessing pipeline for functional MRI | Nature Methods</p>
+
+        <h3>MRIPrep输出符合BIDS Derivatives 规范</h3>
+        <ul>
+            <li>可视化 QA（质量评估）报告：每个主题一个HTML，允许用户对处理质量进行全面的可视化评估，并确保fMRIPrep操作的透明度。</li>
+            <li>预处理数据: 输入的 fMRI 数据已准备好进行分析，即在应用了各种准备程序之后。例如，经过INU校正的 T1 加权图像版本（每个受试者）、经过头部运动校正、切片时间校正并对齐到同一受试者的 T1w 空间或某个标准空间后的BOLD图像。</li>
+            <li>Confounds: this is a special family of derivatives that can be utilized to inform subsequent denoising steps.</li>
+        </ul>
+
+        <h3>可以参考的代码脚本：</h3>
+        <p><a href="https://github.com/nipreps/fmriprep/blob/master/docs/workflows.rst" target="_blank">fmriprep 代码脚本</a></p>
+
+        <h2>结构像预处理：</h2>
+        <h3>INU校正 (INU correction)</h3>
+        <ul>
+            <li>目的：提高图像质量：去除由于磁场不均匀性引起的伪影，如图像中的条纹或斑块。</li>
+            <li>增强分析准确性：在进行统计分析或机器学习算法之前，校正INU可以减少由于强度变化引起的假阳性或假阴性结果，从而提高研究结果的准确性。</li>
+            <li>工具：<a href="https://www.fil.ion.ucl.ac.uk/spm/" target="_blank">SPM</a>、<a href="https://fsl.fmrib.ox.ac.uk" target="_blank">FSL</a></li>
+            <li>优点：正确执行INU校正对于提高后续图像分析步骤的准确性至关重要，因为它能够显著改善图像质量，减少由于磁场不均匀性引起的伪影。</li>
+        </ul>
+
+        <h3>融合和一致性 (Fuse and Conform)</h3>
+        <ul>
+            <li>Fuse：对齐，然后进行融合（即对齐后平均）以生成一个单一的平均图像。</li>
+            <li>Conform：在这个步骤中，fMRIPrep会将图像调整为一致的方向（通常是右-前-上的方向）和体素大小。</li>
+        </ul>
+
+        <h3>头颅去除 (Skull-stripping)</h3>
+        <ul>
+            <li>目的：从脑部影像数据中去除非脑组织（如头骨、头皮和其他非脑组织），以便专注于大脑组织的分析。</li>
+        </ul>
+
+        <h3>空间归一化 (Spatial normalization)</h3>
+        <ul>
+            <li>目的：将个体大脑映射到标准空间（如MNI空间）。</li>
+            <li>使用的工具：ANTs’ <code>antsRegistration</code></li>
+            <li>fmriPrep中脚本设置：</li>
+        </ul>
+        <pre>fmriprep /path/to/BIDS_dataset /path/to/output_dir participant --participant-label sub-01 --fs-license-file /path/to/license.txt --output-spaces MNI152NLin2009cAsym</pre>
+
+        <h3>脑组织分割 (Brain tissue segmentation)</h3>
+        <ul>
+            <li>目的：将大脑分割成灰质、白质和脑脊液等区域。</li>
+        </ul>
+
+        <h3>皮层重建 (Surface reconstruction)</h3>
+        <p>皮层重建通常放在结构像预处理的最后一步。</p>
+
+        <h2>功能像预处理：</h2>
+        <p>在完成结构像的
