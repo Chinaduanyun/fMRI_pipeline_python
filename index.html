@@ -1,137 +1,70 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>基于Python的fMRI数据分析pipeline</title>
+    <title>fMRI Workflow</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 40px;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
         }
-        h1, h2 {
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
             color: #333;
         }
-        ul {
-            list-style-type: none;
-            padding: 0;
+        p {
+            color: #666;
+            line-height: 1.6;
         }
-        li {
-            margin-bottom: 10px;
+        .step {
+            margin-bottom: 40px;
         }
-        a {
-            color: #007BFF;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
+        .step img {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
 <body>
-    <h1>基于Python的fMRI数据分析pipeline</h1>
-    <p>项目成员：朱珊珊（南京师范大学）、王金琪（北京语言大学）、陈婉婷（浙江理工大学）、何丹妮（华东师范大学）</p>
-    <h2>需要安装以下工具/软件包</h2>
-    <ul>
-        <li>命令行 shell：Bash</li>
-        <li>版本控制系统：Git</li>
-        <li>支持远程控制的文本编辑器：VSCode</li>
-        <li>通过 Miniconda 使用 Python 3</li>
-        <li>虚拟化系统：Docker</li>
-        <li>一个 GitHub 帐户</li>
-    </ul>
-    <h2>0. 怎么建立运行环境</h2>
-    <p>为什么要选择使用docker镜像？<br>
-    Docker允许你创建一个隔离的环境，其中预先安装了所有必要的依赖项。可以通过编写Dockerfile来创建包含所需工具和库的镜像。</p>
-    <h2>环境设置</h2>
-    <h3>1. 数据转换</h3>
-    <p>HeuDiconv （推荐用这个）<br>
-    理由：用于将DICOM文件转换为BIDS格式。它包装了dcm2niix工具，使其使用更加便捷<br>
-    操作指南：<a href="https://heudiconv.readthedocs.io/en/latest/">https://heudiconv.readthedocs.io/en/latest/</a></p>
-    <h3>2. 质量控制</h3>
-    <p>MRIQC package （使用最广泛<a href="https://mriqc.readthedocs.io/en/latest/">https://mriqc.readthedocs.io/en/latest/</a>）<br>
-    理由：MRIQC是一个无需参考图像即可从结构性(T1w和 T2w)和功能性MRI数据中提取图像质量指标(IQMs)的工具。MRIQC是Nipype生态系统的一部分，并依赖于其他工具如ANTs和AFNI。</p>
-    <h3>工作流程设计（Workflow Design）</h3>
-    <p>目的: 提取图像质量指标（IQMs）。<br>
-    原则:<br>
-    1. 快速预处理。<br>
-    2. 易于在桌面和高性能计算中使用。<br>
-    3. 生成详细报告。<br>
-    实施:<br>
-    • 使用FSL、ANTs和AFNI等工具，使用nipype框架进行处理。<br>
-    • 遵循BIDS-Apps标准，并持续测试。<br>
-    • 输出: 包括输入图像（64个T1w，31个fMRI）的IQMs和视觉报告。</p>
-    <h3>3. 预处理</h3>
-    <p>推荐使用：<br>
-    fMRIPrep package（示例代码，具体命令行的参数、github链接）<br>
-    参考论文：<a href="https://www.nature.com/articles/s41592-018-0235-4">https://www.nature.com/articles/s41592-018-0235-4</a></p>
-    <p>MRIPrep输出符合BIDS Derivatives 规范（参见<a href="https://bids-specification.readthedocs.io/en/stable/05-derivatives/01-introduction.html">https://bids-specification.readthedocs.io/en/stable/05-derivatives/01-introduction.html</a>以及即将推出的<a href="https://bids-specification.readthedocs.io/en/bep011/05-derivatives/04-structural-derivatives.html">https://bids-specification.readthedocs.io/en/bep011/05-derivatives/04-structural-derivatives.html</a>和<a href="https://bids-specification.readthedocs.io/en/bep012/05-derivatives/05-functional-derivatives.html">https://bids-specification.readthedocs.io/en/bep012/05-derivatives/05-functional-derivatives.html</a>）。fMRIPrep产生三类结果：<br>
-    ●可视化 QA（质量评估）报告：每个主题一个HTML，允许用户对处理质量进行全面的可视化评估，并确保fMRIPrep操作的透明度。<br>
-    ●预处理数据: 输入的 fMRI 数据已准备好进行分析，即在应用了各种准备程序之后。例如，经过INU校正的 T1 加权图像版本（每个受试者）、经过头部运动校正、切片时间校正并对齐到同一受试者的 T1w 空间或某个标准空间后的BOLD图像。<br>
-    ●Confounds: this is a special family of derivatives that can be utilized to inform subsequent denoising steps.</p>
-    <p>可以参考的代码脚本：<a href="https://github.com/nipreps/fmriprep/blob/master/docs/workflows.rst">https://github.com/nipreps/fmriprep/blob/master/docs/workflows.rst</a></p>
-    <h3>结构像预处理：</h3>
-    <p>1. INU校正 (INU correction): 校正不均匀性 (Inhomogeneity) 引起的信号强度变化。<br>
-    目的：提高图像质量：去除由于磁场不均匀性引起的伪影，如图像中的条纹或斑块。<br>
-    增强分析准确性：在进行统计分析或机器学习算法之前，校正INU可以减少由于强度变化引起的假阳性或假阴性结果，从而提高研究结果的准确性。<br>
-    问题特征：不均匀的信号强度、条纹伪影、模糊、噪声、边缘模糊、对比度不足、伪影、失真、不完整的覆盖范围、色彩偏差、分辨率不足、动态范围有限、伪影的模式。<br>
-    工具：SPM（<a href="https://www.fil.ion.ucl.ac.uk/spm/">https://www.fil.ion.ucl.ac.uk/spm/</a>）FSL（<a href="https://fsl.fmrib.ox.ac.uk/">https://fsl.fmrib.ox.ac.uk/</a>），fMRIPrep 会自动调用 FSL 的'fsl_biascorrect'函数来执行 INU 校正。<br>
-    优点：正确执行INU校正对于提高后续图像分析步骤的准确性至关重要，因为它能够显著改善图像质量，减少由于磁场不均匀性引起的伪影。这些伪影如果不被校正，可能会被误认为是真实的生物学信号，从而影响后续分析的准确性。所以INU校正通常放在图像预处理较靠前的位置。<br>
-    Note：首先应该评估之前的处理是否到位，校正前可以先进行视觉检查，如果说原本有较大的头动就应先解决由于运动引起的问题，应适度进行校正，并在必要时进行手动检查。校正后，应通过视觉检查和/或使用质量控制工具来验证校正的效果。比较校正前后的图像，确保校正后的图像质量得到改善。</p>
-    <p>2. 融合和一致性 (Fuse and Conform): 使数据在空间和分辨率上与模板相匹配。<br>
-    • Fuse：对齐，然后进行融合（即对齐后平均）以生成一个单一的平均图像。目的是为了减少随机噪声，提高图像的平均来提高信噪比，以便用于后续的空间归一化和配准等步骤。<br>
-    • Conform：在这个步骤中，fMRIPrep会将图像调整为一致的方向（通常是右-前-上的方向）和体素大小。目的是为了保证图像的空间属性一致，使得后续的处理步骤（如配准到标准空间）在相同的空间框架下进行，减少由于方向或体素大小不一致而导致的误差。<br>
-    • Note：fMRIPrep中会根据输入的数据和元数据自动决定是否执行这些操作，并且自动完成所需处理任务。fMRIPrep会检测每张图像的分辨率、方向和体素大小。<br>
-    • 注意点：尽可能使用相同扫描序列生成的T1w图像，以减少在Conform步骤中进行大幅调整。</p>
-    <p>3. 头颅去除 (Skull-stripping): 去除非脑组织部分，只保留脑组织。<br>
-    ●目的：从脑部影像数据中去除非脑组织（如头骨、头皮和其他非脑组织），以便专注于大脑组织的分析。<br>
-    ●优点：减少噪声和伪影，优化图像配准，改善脑组织分割以及提高绩效效率。<br>
-    ●默认处理（fMRIprep)：antsBrainExtraction.sh<br>
-    ●处理顺序：Skull-stripping 在 T1 加权图像预处理中通常放在靠前的步骤，通常在图像重采样和对比度增强之后，但在后续的图像配准、分割和其他分析步骤之前进行。<br>
-    原因：减少对配准算法的干扰，优化配准结果；保证在segment中只对脑组织进行，减少伪影和噪声对分割结果的影响，提高分析精准性。<br>
-    ●Note：skull-stripping之后，需要检查数据结果是否会出现<br>
-    （1）over-stripping；（2）under-stripping<br>
-    问题可能来源：不同扫描仪不同分辨率的数据，脑内肿瘤等。<br>
-    可应对策略：多算法结合：结合多种 Skull-stripping 方法或使用集成算法，以提高准确性和鲁棒性。手动校正：在自动化处理后进行必要的人工校正，确保去骨效果。数据预处理：提升原始图像质量，如去噪、校正运动伪影等，以辅助 Skull-stripping 的准确性</p>
-    <p>4. 空间归一化 (Spatial normalization): 将个体大脑映射到标准空间（如MNI空间）。<br>
-    ●目的：使多个个体的大脑更像；为后续的跨受试者比较、群体分析等提供了一个统一的坐标框架。<br>
-    ●使用的工具：ANTs’ `antsRegistration`<br>
-    fmriPrep中脚本设置：<br>
-    fmriprep /path/to/BIDS_dataset /path/to/output_dir participant --participant-label sub-01 --fs-license-file /path/to/license.txt --output-spaces MNI152NLin2009cAsym<br>
-    `/path/to/BIDS_dataset`: 你的数据集所在的目录，遵循 BIDS 格式。`/path/to/output_dir`: 输出目录，用于存放处理后的数据。<br>
-    `participant`: 指定处理级别（在个体层面进行处理）；该参数为默认值，可省略；<br>
-    `--participant-label sub-01`: 指定处理的受试者编号，例如 sub-01。<br>
-    `--fs-license-file /path/to/license.txt`: FreeSurfer 许可文件的路径。<br>
-    `--output-spaces MNI152NLin2009cAsym`: 指定空间归一化的目标空间，这里选择了 MNI152 非线性标准空间（2009c非对称版）。<br>
-    fmriPrep中空间归一化的 `--output-spaces` 对齐空间的参数调节：<br>
-    可使用':'对模板进行调节，如'MNI152NLin6Asym:res-2'表明基于resolution 2x2x2mm的标准模板MNI152NLin6Asym进行配准；'fsaverage:den-10k'表明基于网格密度为1w个顶点的 FreeSurfer 的 fsaverage 表面空间进行配准。<br>
-    MNI空间:<br>
-    ●MNI152NLin2009cAsym (非线性)<br>
-    ●MNI152NLin6Asym<br>
-    ●MNI152Lin (线性)<br>
-    个体空间:<br>
-    ●T1w: 原始 T1 加权图像空间（个体解剖空间）；这意味着不执行空间归一化。保留原始解剖图像的空间特征，适用于体素级别的分析。<br>
-    ●fsnative: FreeSurfer 的个体空间；这个空间与 T1w 空间非常接近，但通常更适合表面和皮层分析。<br>
-    其他标准空间:<br>
-    ●例如 fsaverage, fsaverage5, fsaverage6 等 FreeSurfer 的平均模板空间。<br>
-    ○基本原理：结合线性和非线性配准，通过最小化配准误差，将个体的大脑图像精确对齐到标准空间。<br>
-    线性配准公式：<br>
-    a.x 是原始图像中的坐标，x′是变换后的坐标，A 是 3×3 的变换矩阵，包含旋转、缩放和剪切参数，b 是平移向量。<br>
-    b.一般分为刚性变换（rigid transformation） 和 仿射变换（affine transformation）；刚性变换是一种特殊的仿射变换，区别在于是否限制A矩阵的正交性（只为正交矩阵即为刚性变换）；这些变换允许图像在三维空间中进行旋转、平移、缩放和剪切；<br>
-    非线性配准公式：<br>
-    c.Symmetric Normalization (SyN) 算法（ANTs工具包）：以其高精度和对称性著称，能够有效处理复杂的形变。这种算法计算开销较大且处理时间较长；与SPM 使用的非线性配准算法比较，SPM中使用了统一分割与归一化（Unified Segmentation and Normalization）配准算法，结合了解剖先验和灰度信息，特别适合脑解剖结构的标准化；处理时间较短，对极端个体差异的处理可能不够灵活；<br>
-    d.其中，T(Imoving,ϕ)是应用变换 ϕ 后的移动图像，Ifixed是固定图像，Metric 是评估配准质量的度量函数（例如互信息、相关系数）<br>
-    e.通过更复杂的变形场来捕捉个体脑部解剖结构与标准模板之间的细微差异。基于对称性和正则化的非线性配准算法，其核心思想是通过最小化目标图像和参考图像之间的某种相似性度量来找到最佳的非线性变换；<br>
-    ●注意事项：在fmriPrep中无法自选配准方式，为默认的`-t s`（仿射 + SyN非线性）；如需要自定义，可直接使用ANTs包；<br>
-    ●处理后问题处理：<br>
-    a.检查*T1w_preproc.nii.gz<br>
-    i.是否有非脑组织的残留/是否有部分大脑结构丢失----确认*T1w_brainmask.nii.gz图像中脑部遮盖是否准确覆盖了大脑结构而不包含非脑组织，若有影响需要手动调整或重新生成脑部遮盖（brain mask）。<br>
-    ii.伪影----确认输入数据是否存在质量问题，如运动伪影或信号不均匀。<br>
-    b.检查*T1w2MNI.svg<br>
-    i.是否有异常的拉伸或压缩现象----需要检查配准参数，重新确定适当的变换模型</p>
-    <p>5. 脑组织分割 (Brain tissue segmentation): 将大脑分割成灰质、白质和脑脊液等区域。<br>
-    目的：将结构像配到功能像里，就需要进行结构像分割，一般分为灰质、白质、脑脊液。</p>
-    <p>6. 皮层重建 (Surface reconstruction): 使用FreeSurfer或其他工具生成脑皮层的表面模型。<br>
-    根据volume结构像，结合灰质-白质、灰质-脑脊液分割结果，确定灰质的内表面和外表面，建模出皮层的三维网格模型；<br>
-    
+    <div class="container">
+        <h1>fMRI Workflow</h1>
+        
+        <!-- Step 1 -->
+        <div class="step">
+            <h2>Step 1: Preprocessing</h2>
+            <p>Your Markdown content for Step 1 goes here.</p>
+            <img src="path/to/image1.jpg" alt="Preprocessing">
+        </div>
+        
+        <!-- Step 2 -->
+        <div class="step">
+            <h2>Step 2: Analysis</h2>
+            <p>Your Markdown content for Step 2 goes here.</p>
+            <img src="path/to/image2.jpg" alt="Analysis">
+        </div>
+        
+        <!-- Step 3 -->
+        <div class="step">
+            <h2>Step 3: Visualization</h2>
+            <p>Your Markdown content for Step 3 goes here.</p>
+            <img src="path/to/image3.jpg" alt="Visualization">
+        </div>
+        
+        <!-- Step 4 -->
+        <div class="step">
+            <h2>Step 4: Reporting</h2>
+            <p>Your Markdown content for Step 4 goes here.</p>
+            <img src="path/to/image4.jpg" alt="Reporting">
+        </div>
+    </div>
+</body>
+</html>
