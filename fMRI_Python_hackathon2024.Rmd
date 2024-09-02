@@ -1,0 +1,248 @@
+---
+title: "基于Python的fMRI数据分析Pipeline"
+
+author: "项目成员: 朱珊珊（南京师范大学）、王金琪（北京语言大学）、陈婉婷（浙江理工大学）、何丹妮（华东师范大学）、葛铠诚（浙江理工大学）、闫石（北京师范大学）、王文常（安徽医科大学）"
+
+output: html_document
+date: "2024-09-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 环境配置
+
+## 所需工具/软件包
+- 命令行 shell：Bash
+- 版本控制系统：Git
+- 支持远程控制的文本编辑器：VSCode
+- 通过 Miniconda 使用 Python 3
+- 虚拟化系统：Docker
+- 一个 GitHub 帐户
+
+# 0. 建立运行环境
+## 为什么要选择使用Docker镜像？
+Docker允许你创建一个隔离的环境，其中预先安装了所有必要的依赖项。可以通过编写Dockerfile来创建包含所需工具和库的镜像。
+
+# 1. 数据转换
+
+## HeuDiconv
+
+HeuDiconv: 用于将DICOM文件转换为BIDS格式。它包装了dcm2niix工具，使其使用更加便捷。  
+操作指南: [HeuDiconv Documentation](https://heudiconv.readthedocs.io/en/latest/)
+
+# 质量控制
+
+##  package
+
+推荐工具: **MRIQC**
+理由: MRIQC是一个无需参考图像即可从结构性(T1w和 T2w)和功能性MRI数据中提取图像质量指标(IQMs)的工具。MRIQC是Nipype生态系统的一部分，并依赖于其他工具如ANTs和AFNI。  
+操作指南: [MRIQC Documentation](https://mriqc.readthedocs.io/en/latest/)
+
+### MRIQC 工作流程
+目的: 提取图像质量指标（IQMs）。
+原则:
+1. 快速预处理
+2. 易于在桌面和高性能计算中使用
+3. 生成详细报告
+实施:
+- 使用FSL、ANTs和AFNI等工具，使用nipype框架进行处理
+- 遵循BIDS-Apps标准，并持续测试
+- 输出: 包括输入图像（64个T1w，31个fMRI）的IQMs和视觉报告
+
+![MRIQC_workflow](https://github.com/shanshan717/fMRI_pipeline_python/raw/main/figures/MRIQC_workflow.jpeg)
+
+# 预处理
+
+## fMRIPrep package
+推荐工具: **fMRIPrep**
+参考论文: [fMRIPrep Paper](https://www.nature.com/articles/s41592-018-0235-4)
+
+可以参考的代码脚本: [fMRIPrep Workflow Script](https://github.com/nipreps/fmriprep/blob/master/docs/workflows.rst)
+
+![fMRIPrep_workflow](https://github.com/shanshan717/fMRI_pipeline_python/raw/main/figures/fMRIPrep_workflow.png)
+
+![fMRIPrep_anat_output](https://github.com/shanshan717/fMRI_pipeline_python/raw/main/figures/fMRIPrep__anat_output.png)
+
+![fMRIPrep_func_output](https://github.com/shanshan717/fMRI_pipeline_python/raw/main/figures/fMRIPrep_func_output.png)
+## 结构像预处理
+
+## 1. INU校正 (INU correction)
+
+**校正不均匀性 (Inhomogeneity) 引起的信号强度变化。**
+
+### 目的
+
+- **提高图像质量**：去除由于磁场不均匀性引起的伪影，如图像中的条纹或斑块。
+- **增强分析准确性**：在进行统计分析或机器学习算法之前，校正INU可以减少由于强度变化引起的假阳性或假阴性结果，从而提高研究结果的准确性。
+
+### 问题特征
+
+不均匀的信号强度、条纹伪影、模糊、噪声、边缘模糊、对比度不足、伪影、失真、不完整的覆盖范围、色彩偏差、分辨率不足、动态范围有限、伪影的模式。
+
+### 工具
+
+- SPM: [https://www.fil.ion.ucl.ac.uk/spm/](https://www.fil.ion.ucl.ac.uk/spm/)
+- FSL: [https://fsl.fmrib.ox.ac.uk/](https://fsl.fmrib.ox.ac.uk/)
+- fMRIPrep: 自动调用 FSL 的 `fsl_biascorrect` 函数来执行 INU 校正。
+
+### 优点
+
+正确执行INU校正对于提高后续图像分析步骤的准确性至关重要，因为它能够显著改善图像质量，减少由于磁场不均匀性引起的伪影。这些伪影如果不被校正，可能会被误认为是真实的生物学信号，从而影响后续分析的准确性。所以INU校正通常放在图像预处理较靠前的位置。
+
+### Note
+
+首先应该评估之前的处理是否到位，校正前可以先进行视觉检查，如果说原本有较大的头动就应先解决由于运动引起的问题，应适度进行校正，并在必要时进行手动检查。校正后，应通过视觉检查和/或使用质量控制工具来验证校正的效果。比较校正前后的图像，确保校正后的图像质量得到改善。
+
+## 2. 融合和一致性 (Fuse and Conform)
+
+**使数据在空间和分辨率上与模板相匹配。**
+
+### 过程
+
+- **Fuse**：对齐，然后进行融合（即对齐后平均）以生成一个单一的平均图像。目的是为了减少随机噪声，提高图像的平均来提高信噪比，以便用于后续的空间归一化和配准等步骤。
+- **Conform**：在这个步骤中，fMRIPrep会将图像调整为一致的方向（通常是右-前-上的方向）和体素大小。目的是为了保证图像的空间属性一致，使得后续的处理步骤（如配准到标准空间）在相同的空间框架下进行，减少由于方向或体素大小不一致而导致的误差。
+
+### Note
+
+fMRIPrep中会根据输入的数据和元数据自动决定是否执行这些操作，并且自动完成所需处理任务。fMRIPrep会检测每张图像的分辨率、方向和体素大小。
+
+### 注意点
+
+尽可能使用相同扫描序列生成的T1w图像，以减少在Conform步骤中进行大幅调整。
+
+## 3. 头颅去除 (Skull-stripping)
+
+**去除非脑组织部分，只保留脑组织。**
+
+### 目的
+
+从脑部影像数据中去除非脑组织（如头骨、头皮和其他非脑组织），以便专注于大脑组织的分析。
+
+### 优点
+
+减少噪声和伪影，优化图像配准，改善脑组织分割以及提高绩效效率。
+
+### 默认处理（fMRIprep）
+
+`antsBrainExtraction.sh`
+
+### 处理顺序
+
+Skull-stripping 在 T1 加权图像预处理中通常放在靠前的步骤，通常在图像重采样和对比度增强之后，但在后续的图像配准、分割和其他分析步骤之前进行。
+
+### 原因
+
+减少对配准算法的干扰，优化配准结果；保证在分割中只对脑组织进行，减少伪影和噪声对分割结果的影响，提高分析精准性。
+
+### Note
+
+Skull-stripping之后，需要检查数据结果是否会出现以下问题：
+1. Over-stripping
+2. Under-stripping
+
+**问题可能来源**：不同扫描仪不同分辨率的数据，脑内肿瘤等。
+
+**应对策略**：
+- **多算法结合**：结合多种 Skull-stripping 方法或使用集成算法，以提高准确性和鲁棒性。
+- **手动校正**：在自动化处理后进行必要的人工校正，确保去骨效果。
+- **数据预处理**：提升原始图像质量，如去噪、校正运动伪影等，以辅助 Skull-stripping 的准确性。
+
+## 4. 空间归一化 (Spatial normalization)
+
+**将个体大脑映射到标准空间（如MNI空间）。**
+
+### 目的
+
+使多个个体的大脑更像；为后续的跨受试者比较、群体分析等提供了一个统一的坐标框架。
+
+### 使用的工具
+
+- ANTs’ `antsRegistration`
+- fMRIPrep 脚本设置：
+  
+## 功能像预处理
+
+在完成结构像的预处理后，接下来的步骤是将功能像与结构像对齐。
+
+## 1. 头动校正 (Motion Correction)
+
+**目的**：头动校正对于消除假阴性和假阳性至关重要，尤其是那些散乱的、集中在边缘的激活可能是伪影。
+
+### Note
+
+- 功能像是4D的图像，因此运动校正的复杂性较高。
+- 运动校正参数输出包括相对运动和绝对运动：
+  - **相对运动**：描述图像帧之间的移动情况，较大的跳跃比缓慢的漂移更为严重。
+  - **绝对运动**：描述整体的运动趋势。
+- 运动校正可以显著提高分析的准确性，减少由运动引起的伪影。
+
+## 2. 层级时间校正 (Slice Timing Correction)
+
+**目的**：校正由于不同层级（slice）在不同时间点采集所引起的信号差异，以统一时间轴上的信号。
+
+- 在fMRI实验中，通常不同的slice是在不同的时间点采集的，层级时间校正通过调整每个slice的时间点，使得所有的slice看起来像是同时采集的。
+- 这一校正有助于后续分析，尤其是在时间序列分析中，使得信号的时间点更加一致。
+
+## 3. 失真校正 (B0 Field Distortion Correction)
+
+**目的**：校正由B0场不均匀性引起的信号失真。
+
+- 由于fMRI信号对磁场不均匀性非常敏感，B0场的失真校正可以减少信号偏移和伪影，提高图像的空间准确性。
+- 通常使用磁场图（Field map）或其他基于相位差异的技术来进行校正。
+
+## 4. 对齐至T1w参考图像 (Alignment to T1w Reference Image)
+
+**目的**：将功能像对齐至结构像以确保功能与解剖结构的一致性。
+
+- 这一过程通常包括将功能像与预处理后的T1w结构像进行配准，使得功能数据能够与解剖结构精确对齐。
+- 对齐步骤对于确保后续分析（如功能定位、脑区分割等）的准确性至关重要。
+
+---
+
+# 功能磁共振分析方法汇总
+
+## 分析方法横向对比表
+
+| 分析方法       | python 包                                                                 | 适用的数据类型 | 备注 |
+|:-------------|:-----------------------------------------------------------------------|:------------|:----|
+| GLM          | [Nilearn](https://nilearn.github.io/), [Nipype](https://nipy.org/), [fMRIflows](https://fmriprep.org/fmriflows/) | 任务态          |      |
+| RSA          | [NeuroRA](https://neuroview.org/), [PyMVPA](http://www.pymvpa.org/), [Nilearn](https://nilearn.github.io/), [brainspace](https://brainspace.readthedocs.io/en/latest/) | 任务态          |      |
+| IS-RSA       | [Nilearn](https://nilearn.github.io/), [Brainiak](https://brainiak.org/), [Pyrsa](https://pyrsa.readthedocs.io/), [PyMVPA](http://www.pymvpa.org/), [Nipype](https://nipy.org/) | 任务态          |      |
+| FC           | [Nilearn](https://nilearn.github.io/), [Nipype](https://nipy.org/), [fMRIflows](https://fmriprep.org/fmriflows/) | 任务态、静息态    |      |
+| ISC          | [Brainiak](https://brainiak.org/)                                                      | 任务态          |      |
+| ISFC         | [Brainiak](https://brainiak.org/)                                                      | 任务态          |      |
+| PPI/gPPI     | [PyPPI](https://pypi.org/project/pypPI/)                                               | 任务态          |      |
+| GCA          | [Nilearn](https://nilearn.github.io/), [Nitime](https://nipy.org/nitime/), [MNE-Python](https://mne.tools/), [statsmodels](https://www.statsmodels.org/) | 任务态          |      |
+| MVPA         | [Nilearn](https://nilearn.github.io/), [PyMVPA](http://www.pymvpa.org/), [Brainiak](https://brainiak.org/), [Nipype](https://nipy.org/) + [scikit-learn](https://scikit-learn.org/) | 任务态          |      |
+| Gradient     | [Brainspace](https://brainspace.readthedocs.io/en/latest/), [scikit-learn](https://scikit-learn.org/) | 静息态          |      |
+| DCM          | [cdn-fmri](https://pypi.org/project/cdn-fmri/)    | 任务态            |      |
+
+#### 备注：
+
+1. **generalized form of context dependent psychophysiological interaction method (gPPI)**
+2. **Granger causality analysis (GCA)**
+3. **RSA (Representational Similarity Analysis)**
+4. **IS-RSA (Inter-subject Representational Similarity Analysis)**
+5. **ISC (Inter-subject correlation)**
+6. **ISFC (Inter-subject functional connectivity)**
+7. **MVPA (multi-voxel pattern analysis)**
+
+#### 可视化工具
+
+- nilearn
+- pysurfer
+- MRICron
+- MRICronGL
+
+#### 其他工具
+
+- SPM
+- FSL
+- ICA分析: GIFT
+- FreeSurfer
+- 弥散图像处理: DSISTUDIO, MRTRIXV, DIPY
+- AMICO
+- 机器学习: scikit-learn
+- DPABI
